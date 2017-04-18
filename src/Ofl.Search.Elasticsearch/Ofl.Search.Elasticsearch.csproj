@@ -6,6 +6,7 @@
     <RepositoryUrl>https://github.com/OneFrameLink/Ofl.Search.Elasticsearch.git</RepositoryUrl>
     <Description>Elasticsearch-specific implementation of Ofl.Search.Abstractions abstractions.</Description>
     <PackageTags>search elasticsearch</PackageTags>
+	<Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
