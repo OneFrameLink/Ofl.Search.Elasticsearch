@@ -48,7 +48,13 @@ before_build:
   - ps: Write-Host "Build version set to - $env:APPVEYOR_BUILD_VERSION"
 # Restore
   - dotnet restore
-  
+    
+#--------------------------------------------------
+# Testing
+#--------------------------------------------------
+ test_script
+    - dotnet test
+
 #--------------------------------------------------
 # Build hooks - after
 #--------------------------------------------------
