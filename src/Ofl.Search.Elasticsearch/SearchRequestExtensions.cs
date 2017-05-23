@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using Ofl.Core.Linq.Expressions;
-using Ofl.Core.Reflection;
-using Ofl.Core.Linq;
+using Ofl.Linq;
+using Ofl.Linq.Expressions;
+using Ofl.Reflection;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -114,10 +114,10 @@ namespace Ofl.Search.Elasticsearch
             return ExpressionsByType.GetOrAdd(type,
                 t => (
                     from p in t.GetPropertiesWithPublicInstanceGetters()
-                    where p.PropertyType == typeof(string) || typeof(IEnumerable<string>).IsAssignableFrom(p.PropertyType)
+                    where p.PropertyType == typeof(string) || typeof(IEnumerable<string>).GetTypeInfo().IsAssignableFrom(p.PropertyType.GetTypeInfo())
                     let attr = p.GetCustomAttribute<IndexingAttribute>(true)
                     where attr == null || attr.Indexing != Indexing.None
-                    select p.CreateGetPropertyLambdaExpression<T>()
+                    select p.CreateGetPropertyLambdaExpression<T, object>()
                 ).
                 Cast<Expression>().
                 ToReadOnlyCollection()

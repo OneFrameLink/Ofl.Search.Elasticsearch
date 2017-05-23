@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Nest;
-using Ofl.Core.Linq;
-using Ofl.Core.Linq.Expressions;
-using Ofl.Core.Reflection;
-using System.Linq;
+using Ofl.Linq;
+using Ofl.Reflection;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -82,7 +81,7 @@ namespace Ofl.Search.Elasticsearch
             if (excludedProperties == null) throw new ArgumentNullException(nameof(excludedProperties));
 
             // Get the expressions, place in a set.
-            ISet<PropertyInfo> excludedPropertyInfos = excludedProperties.GetProperties().ToHashSet();
+            ISet<PropertyInfo> excludedPropertyInfos = excludedProperties.Select(e => e.GetPropertyInfo()).ToHashSet();
 
             // Cycle through all public instance properties not in the exclude list and
             // also returns a string.

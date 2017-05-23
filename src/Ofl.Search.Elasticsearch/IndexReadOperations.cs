@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Nest;
 using System.Linq;
-using Ofl.Core.Linq;
+using Ofl.Linq;
 
 namespace Ofl.Search.Elasticsearch
 {

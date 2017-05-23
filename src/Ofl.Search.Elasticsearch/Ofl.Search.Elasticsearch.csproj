@@ -11,6 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="1.1.2" />
+    <PackageReference Include="Ofl.Linq.Expressions" Version="1.0.3" />
+    <PackageReference Include="Ofl.Reflection" Version="1.1.4" />
     <PackageReference Include="Ofl.Search" Version="1.1.5" />
     <PackageReference Include="Ofl.Search.Elasticsearch.Abstractions" Version="1.0.3" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.3.0" />

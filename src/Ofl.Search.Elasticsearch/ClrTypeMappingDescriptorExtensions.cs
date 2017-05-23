@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Nest;
-using Ofl.Core.Reflection;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
-using Ofl.Core.Linq;
-using Ofl.Core.Linq.Expressions;
+using Ofl.Linq;
+using Ofl.Linq.Expressions;
+using Ofl.Reflection;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -35,7 +35,7 @@ namespace Ofl.Search.Elasticsearch
             PropertyInfo propertyInfo = propertyInfos.Single();
 
             // Create the lambda.
-            Expression<Func<T, object>> idPropertyExpression = propertyInfo.CreateGetPropertyLambdaExpression<T>();
+            Expression<Func<T, object>> idPropertyExpression = propertyInfo.CreateGetPropertyLambdaExpression<T, object>();
 
             // Set that property.
             return selector.IdProperty(idPropertyExpression);
