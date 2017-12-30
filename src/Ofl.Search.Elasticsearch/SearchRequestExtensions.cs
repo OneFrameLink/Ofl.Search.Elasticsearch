@@ -74,7 +74,7 @@ namespace Ofl.Search.Elasticsearch
             // Just a query string query, as per:
             // https://www.elastic.co/guide/en/elasticsearch/reference/5.6/query-dsl-query-string-query.html
             return new Func<QueryContainerDescriptor<T>, QueryContainer>[] {
-                s => s.Match(m => m.Query(request.Query))
+                s => s.QueryString(d => d.Query(request.Query))
             };
         }
     }
