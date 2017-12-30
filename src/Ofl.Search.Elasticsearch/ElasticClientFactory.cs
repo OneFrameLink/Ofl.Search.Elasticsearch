@@ -11,20 +11,18 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        public ElasticClientFactory(IOptions<ElasticsearchConfiguration> configuration)
+        public ElasticClientFactory(IOptions<ElasticClientFactoryConfiguration> elasticClientFactoryConfigurationOptions)
         {
             // Validate parameters.
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-
-            // Assign values.
-            _configuration = configuration.Value;
+            _elasticClientFactoryConfigurationOptions = elasticClientFactoryConfigurationOptions ??
+                throw new ArgumentNullException(nameof(elasticClientFactoryConfigurationOptions));
         }
 
         #endregion
 
         #region Instance, read-only state.
 
-        private readonly ElasticsearchConfiguration _configuration;
+        private readonly IOptions<ElasticClientFactoryConfiguration> _elasticClientFactoryConfigurationOptions;
 
         #endregion
 
@@ -33,14 +31,18 @@ namespace Ofl.Search.Elasticsearch
         public Task<IElasticClient> CreateClientAsync(Func<ConnectionSettings, ConnectionSettings> connectionSettingsModifier, 
             CancellationToken cancellationToken)
         {
+            // The options.
+            ElasticClientFactoryConfiguration elasticClientFactoryConfiguration =
+                _elasticClientFactoryConfigurationOptions.Value;
+
             // The connection pool.
-            var connectionPool = new SingleNodeConnectionPool(_configuration.Url);
+            var connectionPool = new SingleNodeConnectionPool(elasticClientFactoryConfiguration.Url);
 
             // The settings.
             var connectionSettings = new ConnectionSettings(connectionPool);
 
             // Enable compression if set.
-            if (_configuration.EnableHttpCompression)
+            if (elasticClientFactoryConfiguration.EnableHttpCompression)
                 connectionSettings = connectionSettings.EnableHttpCompression();
 
             // Call the modifier.

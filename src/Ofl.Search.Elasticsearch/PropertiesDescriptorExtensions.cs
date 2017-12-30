@@ -109,7 +109,7 @@ namespace Ofl.Search.Elasticsearch
                 // Aggregate.
                 Aggregate(propertiesDescriptor, (pd, pi) => 
                     // Update the properties descriptor.
-                    pd.String(d => {
+                    pd.Text(d => {
                         // Set the name.  Use the property info so name conversion
                         // takes place correctly.
                         d = d.Name(pi);

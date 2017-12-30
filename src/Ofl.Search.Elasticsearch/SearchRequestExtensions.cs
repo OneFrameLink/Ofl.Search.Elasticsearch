@@ -1,14 +1,6 @@
 ﻿using System;
 using Nest;
-using System.Collections.Concurrent;
-using System.Linq.Expressions;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
-using Ofl.Linq;
-using Ofl.Linq.Expressions;
-using Ofl.Reflection;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -42,7 +34,7 @@ namespace Ofl.Search.Elasticsearch
             selector = selector.Query(
                 q => q.Bool(
                     b => b.
-                        Should(request.QueryAllFields<T>()).
+                        Should(request.QueryStringQuery<T>()).
                         Filter(request.Filter<T>())
                     )
             );
@@ -57,71 +49,33 @@ namespace Ofl.Search.Elasticsearch
             // Validate parameters.
             if (request == null) throw new ArgumentNullException(nameof(request));
 
+            // The implementation.
+            IEnumerable<Func<QueryContainerDescriptor<T>, QueryContainer>> Implementation() {
+                // If there is no filters, break.
+                if (request.Filters == null) yield break;
+
+                // Cycle through the key/value pairs.
+                foreach (KeyValuePair<string, object> pair in request.Filters)
+                    // Yield the query container.
+                    yield return d => d.Term(pair.Key, pair.Value);
+            }
+
             // Call the implementation.
-            return request.FilterImplementation<T>();
+            return Implementation();
         }
 
-        private static IEnumerable<Func<QueryContainerDescriptor<T>, QueryContainer>> FilterImplementation<T>(this SearchRequest request)
-            where T : class
-        {
-            // Validate parameters.
-            Debug.Assert(request != null);
 
-            // If there is no filters, break.
-            if (request.Filters == null) yield break;
-
-            // Cycle through the key/value pairs.
-            foreach (KeyValuePair<string, object> pair in request.Filters)
-                // Yield the query container.
-                yield return d => d.Term(pair.Key, pair.Value);
-        }
-
-        private static IEnumerable<Func<QueryContainerDescriptor<T>, QueryContainer>> QueryAllFields<T>(this SearchRequest request)
+        private static IEnumerable<Func<QueryContainerDescriptor<T>, QueryContainer>> QueryStringQuery<T>(this SearchRequest request)
             where T : class
         {
             // Validate parameters.
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            // Call the implementation.
-            return request.QueryAllFieldsImplementation<T>();
-        }
-
-        private static IEnumerable<Func<QueryContainerDescriptor<T>, QueryContainer>> QueryAllFieldsImplementation<T>(this SearchRequest request)
-            where T : class
-        {
-            // Validate parameters.
-            Debug.Assert(request != null);
-
-            // Get the expressions.
-            IEnumerable<Expression<Func<T, object>>> expressions = GetExpressions<T>();
-
-            // Cycle through the properties, yield the function.
-            foreach (Expression<Func<T, object>> expression in expressions)
-                // Yield.
-                yield return s => s.Match(m => m.Field(expression).Query(request.Query));
-        }
-
-        private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<Expression>> ExpressionsByType = 
-            new ConcurrentDictionary<Type, IReadOnlyCollection<Expression>>();
-
-        private static IEnumerable<Expression<Func<T, object>>> GetExpressions<T>()
-            where T : class
-        {
-            // The type.
-            Type type = typeof(T);
-
-            // Get or Add.
-            return ExpressionsByType.GetOrAdd(type,
-                t => (
-                    from p in t.GetPropertiesWithPublicInstanceGetters()
-                    where p.PropertyType == typeof(string) || typeof(IEnumerable<string>).GetTypeInfo().IsAssignableFrom(p.PropertyType.GetTypeInfo())
-                    let attr = p.GetCustomAttribute<IndexingAttribute>(true)
-                    where attr == null || attr.Indexing != Indexing.None
-                    select p.CreateGetPropertyLambdaExpression<T, object>()
-                ).
-                Cast<Expression>().
-                ToReadOnlyCollection()
-            ).Cast<Expression<Func<T, object>>>();
+            // Just a query string query, as per:
+            // https://www.elastic.co/guide/en/elasticsearch/reference/5.6/query-dsl-query-string-query.html
+            return new Func<QueryContainerDescriptor<T>, QueryContainer>[] {
+                s => s.Match(m => m.Query(request.Query))
+            };
         }
     }
 }

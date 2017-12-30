@@ -12,7 +12,8 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        internal IndexReadOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : base(elasticClientFactory, index)
+        internal IndexReadOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : 
+            base(elasticClientFactory, index)
         { }
 
         #endregion
@@ -34,10 +35,7 @@ namespace Ofl.Search.Elasticsearch
 
             // Search.
             ISearchResponse<T> response = await client.SearchAsync<T>(
-                d => d.
-                    UpdateSearchDescriptor(Index, request).
-                    RequestConfiguration(c => c.CancellationToken(cancellationToken))
-            ).ConfigureAwait(false);
+                d => d.UpdateSearchDescriptor(Index, request), cancellationToken).ConfigureAwait(false);
 
             // Validate the response.
             response.ThrowIfError();
@@ -45,7 +43,9 @@ namespace Ofl.Search.Elasticsearch
             // Return the response.
             return new SearchResponse<T> {
                 Request = request,
-                Results = response.Hits.Select(h => h.Source).ToReadOnlyCollection()
+                MaximumScore = (decimal) response.MaxScore,
+                TotalHits = (int) response.Total,
+                Hits = response.Hits.Select(h => h.ToHit()).ToReadOnlyCollection()
             };            
         }
 

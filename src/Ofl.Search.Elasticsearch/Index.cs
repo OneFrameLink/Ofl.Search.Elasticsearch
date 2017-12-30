@@ -12,12 +12,7 @@ namespace Ofl.Search.Elasticsearch
         protected Index(IElasticClientFactory elasticClientFactory, string name) : base(name)
         {
             // Validate parameters.
-            if (elasticClientFactory == null) throw new ArgumentNullException(nameof(elasticClientFactory));
-
-            // Assign values.
-            _elasticClientFactory = elasticClientFactory;
-
-            // Create the write operations.
+            _elasticClientFactory = elasticClientFactory ?? throw new ArgumentNullException(nameof(elasticClientFactory));
         }
 
         #endregion
@@ -62,11 +57,10 @@ namespace Ofl.Search.Elasticsearch
             IElasticClient client = await CreateElasticClientAsync(cancellationToken).ConfigureAwait(false);
 
             // The request.
-            IDeleteIndexRequest request = new DeleteIndexDescriptor(Indices.Index(new IndexName { Name = Name })).
-                RequestConfiguration(c => c.CancellationToken(cancellationToken));
+            IDeleteIndexRequest request = new DeleteIndexDescriptor(Indices.Index(new IndexName { Name = Name }));
 
             // Delete and return the response.
-            return await client.DeleteIndexAsync(request).ConfigureAwait(false);
+            return await client.DeleteIndexAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion

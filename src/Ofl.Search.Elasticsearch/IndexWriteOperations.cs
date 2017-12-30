@@ -11,7 +11,8 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        internal IndexWriteOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : base(elasticClientFactory, index)
+        internal IndexWriteOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : 
+            base(elasticClientFactory, index)
         { }
 
         #endregion
@@ -31,12 +32,10 @@ namespace Ofl.Search.Elasticsearch
             IBulkRequest request = new BulkDescriptor().
                 Index(Index.Name).
                 Type<T>().
-                IndexMany(source, (d, t) => d.Document(t)).
-
-                RequestConfiguration(d => d.CancellationToken(cancellationToken));
+                IndexMany(source, (d, t) => d.Document(t));
 
             // Send the request.
-            IBulkResponse response = await client.BulkAsync(request).ConfigureAwait(false);
+            IBulkResponse response = await client.BulkAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Throw if there is an error.
             response.ThrowIfError();

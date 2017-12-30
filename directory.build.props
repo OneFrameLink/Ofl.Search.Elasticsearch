@@ -6,6 +6,6 @@
     <PackageIconUrl>https://raw.githubusercontent.com/OneFrameLink/Ofl._Shared/master/OneFrameLink_225x225.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-	<Copyright>Copyright &#169; 2017 One Frame Link</Copyright>
+	  <Copyright>Copyright &#169; 2017 One Frame Link</Copyright>
   </PropertyGroup>
 </Project>

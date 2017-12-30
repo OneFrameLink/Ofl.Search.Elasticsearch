@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.4
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C9071DBA-FF06-4548-9731-212C3B7BB08A}"
 EndProject
@@ -10,6 +10,16 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ofl.Search.Elasticsearch", "src\Ofl.Search.Elasticsearch\Ofl.Search.Elasticsearch.csproj", "{7016321D-5D96-48C6-9D50-F0EF16E02508}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Ofl.Search.Elasticsearch.Tests", "test\Ofl.Search.Elasticsearch.Tests\Ofl.Search.Elasticsearch.Tests.csproj", "{1D76491C-C7AA-4528-9A04-CBF511A330ED}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution-level items", "solution-level items", "{B1121DD9-ECEA-4F24-B04D-05AF72D905E0}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.gitmodules = .gitmodules
+		appveyor.yml = appveyor.yml
+		directory.build.props = directory.build.props
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,5 +62,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{7016321D-5D96-48C6-9D50-F0EF16E02508} = {C9071DBA-FF06-4548-9731-212C3B7BB08A}
 		{1D76491C-C7AA-4528-9A04-CBF511A330ED} = {1E764839-EE37-43D8-AAF6-E4F1798EA0E7}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {94BB55E1-01C4-4E9D-B96D-61D1F04ABAF1}
 	EndGlobalSection
 EndGlobal
