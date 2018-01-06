@@ -49,6 +49,32 @@ namespace Ofl.Search.Elasticsearch
             };            
         }
 
+        public virtual async Task<T> GetAsync(object id, CancellationToken cancellationToken)
+        {
+            // Validate parameters.
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            // Get the ID.
+            Id convertedId = id.ToId();
+
+            // Create the document path.
+            var documentPath = new DocumentPath<T>(convertedId);
+
+            // Set the index.
+            documentPath.Index(this.Index.Name);
+
+            // Create the client.
+            IElasticClient client = await CreateElasticClientAsync(cancellationToken).
+                ConfigureAwait(false);
+
+            // Get.
+            IGetResponse<T> response = await client.GetAsync(documentPath,
+                cancellationToken: cancellationToken).ConfigureAwait(false);
+
+            // If not found, throw.
+            return response.Found ? response.Source : null;
+        }
+
         #endregion
     }
 }
