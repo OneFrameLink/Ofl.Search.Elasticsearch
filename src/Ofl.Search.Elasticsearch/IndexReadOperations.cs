@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Nest;
@@ -33,9 +34,12 @@ namespace Ofl.Search.Elasticsearch
             IElasticClient client = await CreateElasticClientAsync(cancellationToken).
                 ConfigureAwait(false);
 
+            // Create the pre and post tag for highlighting.
+            string preAndPostTag = CreatePreAndPostTag();
+
             // Search.
             ISearchResponse<T> response = await client.SearchAsync<T>(
-                d => d.UpdateSearchDescriptor(Index, request), cancellationToken).ConfigureAwait(false);
+                d => d.UpdateSearchDescriptor(Index, request, preAndPostTag), cancellationToken).ConfigureAwait(false);
 
             // Validate the response.
             response.ThrowIfError();
@@ -45,34 +49,31 @@ namespace Ofl.Search.Elasticsearch
                 Request = request,
                 MaximumScore = (decimal) response.MaxScore,
                 TotalHits = (int) response.Total,
-                Hits = response.Hits.Select(h => h.ToHit()).ToReadOnlyCollection()
+                Hits = response.Hits.Select(h => h.ToHit(preAndPostTag)).ToReadOnlyCollection()
             };            
         }
 
-        public virtual async Task<T> GetAsync(object id, CancellationToken cancellationToken)
+        private static string CreatePreAndPostTag() => Guid.NewGuid().ToString("B");
+
+        public virtual async Task<IReadOnlyCollection<T>> GetAsync(IEnumerable<object> ids, CancellationToken cancellationToken)
         {
             // Validate parameters.
-            if (id == null) throw new ArgumentNullException(nameof(id));
-
-            // Get the ID.
-            Id convertedId = id.ToId();
-
-            // Create the document path.
-            var documentPath = new DocumentPath<T>(convertedId);
-
-            // Set the index.
-            documentPath.Index(this.Index.Name);
+            if (ids == null) throw new ArgumentNullException(nameof(ids));
 
             // Create the client.
             IElasticClient client = await CreateElasticClientAsync(cancellationToken).
                 ConfigureAwait(false);
 
-            // Get.
-            IGetResponse<T> response = await client.GetAsync(documentPath,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Create the request.
+            ISearchRequest Request(SearchDescriptor<T> s) => s.Query(d => d.Ids(i => i.Types(typeof(T))
+                .Values(ids.Select(id => id.ToId()))));
 
-            // If not found, throw.
-            return response.Found ? response.Source : null;
+            // Create the search descriptor
+            ISearchResponse<T> response = await client.SearchAsync((Func<SearchDescriptor<T>, ISearchRequest>) Request, cancellationToken)
+                .ConfigureAwait(false);
+
+            // Return.
+            return response.Documents;
         }
 
         #endregion

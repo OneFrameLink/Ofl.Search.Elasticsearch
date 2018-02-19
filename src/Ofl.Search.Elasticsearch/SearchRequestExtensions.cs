@@ -7,12 +7,13 @@ namespace Ofl.Search.Elasticsearch
     public static class SearchRequestExtensions
     {
         public static SearchDescriptor<T> UpdateSearchDescriptor<T>(this SearchDescriptor<T> selector, 
-            Index index, SearchRequest request)
+            Index index, SearchRequest request, string preAndPostTag)
             where T : class
         {
             // Validate parameters.
             if (selector == null) throw new ArgumentNullException(nameof(selector));
             if (index == null) throw new ArgumentNullException(nameof(index));
+            if (string.IsNullOrWhiteSpace(preAndPostTag)) throw new ArgumentNullException(nameof(preAndPostTag));
             request.Validate();
 
             // Start updating.
@@ -39,6 +40,18 @@ namespace Ofl.Search.Elasticsearch
                     )
             );
 
+            // Highlight, if desired.
+            if (request.Highlight)
+                // Highlight.
+                selector = selector.Highlight(
+                    h => h
+                        .PreTags(preAndPostTag)
+                        .PostTags(preAndPostTag)
+                        .NumberOfFragments(0)
+                        .RequireFieldMatch(false)
+                        .Fields(f => f.AllField())
+                );
+
             // Return the descriptor.
             return selector;
         }
@@ -55,9 +68,18 @@ namespace Ofl.Search.Elasticsearch
                 if (request.Filters == null) yield break;
 
                 // Cycle through the key/value pairs.
-                foreach (KeyValuePair<string, object> pair in request.Filters)
-                    // Yield the query container.
-                    yield return d => d.Term(pair.Key, pair.Value);
+                foreach (Filter filter in request.Filters)
+                {
+                    // Switch on the operation.
+                    if (string.IsNullOrWhiteSpace(filter.Operation))
+                        // Equals.
+                        yield return d => d.Term(filter.Field, filter.Value);
+
+                    // If the type is a date.
+                    if (string.Compare(filter.Operation, "lte", StringComparison.OrdinalIgnoreCase) == 0)
+                        // Less than or equal.
+                        yield return d => d.DateRange(r => r.GreaterThan(DateMath.FromString("")));
+                }
             }
 
             // Call the implementation.
