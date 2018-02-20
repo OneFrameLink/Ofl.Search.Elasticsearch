@@ -19,7 +19,7 @@ namespace Ofl.Search.Elasticsearch
             return new Hit<T> {
                 Item = hit.Source,
                 Score = (decimal?) hit.Score,
-                Highligts = hit.Highlights?.ToReadOnlyDictionary(h => h.Key, h => h.Value.ToHighlightOffsets(preAndPostTag))
+                Highlights = hit.Highlights?.ToReadOnlyDictionary(h => h.Key, h => h.Value.ToHighlightOffsets(preAndPostTag))
             };
         }
 
