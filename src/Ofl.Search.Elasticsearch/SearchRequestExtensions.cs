@@ -49,7 +49,7 @@ namespace Ofl.Search.Elasticsearch
                         .PostTags(preAndPostTag)
                         .NumberOfFragments(0)
                         .RequireFieldMatch(false)
-                        .Fields(f => f.AllField())
+                        .Fields(f => f.Field("*"))
                 );
 
             // Return the descriptor.

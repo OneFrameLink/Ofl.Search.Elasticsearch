@@ -65,11 +65,16 @@ namespace Ofl.Search.Elasticsearch
                 ConfigureAwait(false);
 
             // Create the request.
-            ISearchRequest Request(SearchDescriptor<T> s) => s.Query(d => d.Ids(i => i.Types(typeof(T))
-                .Values(ids.Select(id => id.ToId()))));
+            ISearchRequest Request(SearchDescriptor<T> s) => s
+                .Query(
+                    d => d
+                        .Ids(i => i
+                            .Types(typeof(T))
+                            .Values(ids.Select(id => id.ToId()))))
+                .Index(Index.Name);
 
             // Create the search descriptor
-            ISearchResponse<T> response = await client.SearchAsync((Func<SearchDescriptor<T>, ISearchRequest>) Request, cancellationToken)
+            ISearchResponse<T> response = await client.SearchAsync((Func<SearchDescriptor<T>, ISearchRequest>)Request, cancellationToken)
                 .ConfigureAwait(false);
 
             // Return.
