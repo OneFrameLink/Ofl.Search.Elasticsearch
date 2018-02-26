@@ -13,7 +13,6 @@ namespace Ofl.Search.Elasticsearch
         {
             // Validate parameters.
             if (hit == null) throw new ArgumentNullException(nameof(hit));
-            if (string.IsNullOrWhiteSpace(preAndPostTag)) throw new ArgumentNullException(nameof(preAndPostTag));
 
             // Map and return.
             return new Hit<T> {

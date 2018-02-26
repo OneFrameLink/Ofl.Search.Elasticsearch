@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Nest;
@@ -55,30 +54,50 @@ namespace Ofl.Search.Elasticsearch
 
         private static string CreatePreAndPostTag() => Guid.NewGuid().ToString("B");
 
-        public virtual async Task<IReadOnlyCollection<T>> GetAsync(IEnumerable<object> ids, CancellationToken cancellationToken)
+        public virtual async Task<GetResponse<T>> GetAsync(GetRequest request, CancellationToken cancellationToken)
         {
             // Validate parameters.
-            if (ids == null) throw new ArgumentNullException(nameof(ids));
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
             // Create the client.
             IElasticClient client = await CreateElasticClientAsync(cancellationToken).
                 ConfigureAwait(false);
 
             // Create the request.
-            ISearchRequest Request(SearchDescriptor<T> s) => s
-                .Query(
-                    d => d
-                        .Ids(i => i
-                            .Types(typeof(T))
-                            .Values(ids.Select(id => id.ToId()))))
-                .Index(Index.Name);
+            ISearchRequest Request(SearchDescriptor<T> searchDescriptor) {
+                // Set the query.
+                searchDescriptor = searchDescriptor
+                    .Query(
+                        d => d
+                            .Ids(i => i
+                                .Types(typeof(T))
+                                .Values(request.Ids.Select(id => id.ToId()))))
+                    .Index(Index.Name);
+
+                // If skip is set, then set it.
+                if (request.Skip > 0)
+                    // Set.
+                    searchDescriptor = searchDescriptor.Skip(request.Skip);
+
+                // If only taking a certain amount, do so here.
+                if (request.Take != null)
+                    // Set.
+                    searchDescriptor = searchDescriptor.Take(request.Take.Value);
+
+                // Return the search descriptor.
+                return searchDescriptor;
+            }
 
             // Create the search descriptor
             ISearchResponse<T> response = await client.SearchAsync((Func<SearchDescriptor<T>, ISearchRequest>)Request, cancellationToken)
                 .ConfigureAwait(false);
 
-            // Return.
-            return response.Documents;
+            // Create the response and return.
+            return new GetResponse<T> {
+                Request = request,
+                TotalHits = response.Total,
+                Hits = response.Hits.Select(h => h.ToHit(null)).ToReadOnlyCollection()
+            };
         }
 
         #endregion
