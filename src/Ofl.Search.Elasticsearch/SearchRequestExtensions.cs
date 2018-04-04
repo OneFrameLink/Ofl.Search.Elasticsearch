@@ -1,6 +1,7 @@
 ﻿using System;
 using Nest;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -96,8 +97,16 @@ namespace Ofl.Search.Elasticsearch
             // Just a query string query, as per:
             // https://www.elastic.co/guide/en/elasticsearch/reference/5.6/query-dsl-query-string-query.html
             return new Func<QueryContainerDescriptor<T>, QueryContainer>[] {
-                s => s.QueryString(d => d.Query(request.Query))
+                s => s.QueryString(d => d.Query(FormatQueryString(request.Query)))
             };
         }
+
+        // Need to transform the query string to handle characters used in lucene, as per:
+        // https://discuss.elastic.co/t/illegal-characters/3295/2
+        // http://lucene.apache.org/core/3_0_3/queryparsersyntax.html
+        private static readonly Regex QueryStringReplaceRegex = new Regex("([+\\-!(){}[\\]^\"~*?:\\\\]{1}|&&|\\|\\|)", RegexOptions.Compiled);
+
+        private static string FormatQueryString(string queryString) =>
+            queryString == null ? null : QueryStringReplaceRegex.Replace(queryString, m => "\\\\" + m.Value);
     }
 }
