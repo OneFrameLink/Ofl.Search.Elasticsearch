@@ -107,6 +107,6 @@ namespace Ofl.Search.Elasticsearch
         private static readonly Regex QueryStringReplaceRegex = new Regex("([+\\-!(){}[\\]^\"~*?:\\\\]{1}|&&|\\|\\|)", RegexOptions.Compiled);
 
         private static string FormatQueryString(string queryString) =>
-            queryString == null ? null : QueryStringReplaceRegex.Replace(queryString, m => "\\\\" + m.Value);
+            queryString == null ? null : QueryStringReplaceRegex.Replace(queryString, m => "\\" + m.Value);
     }
 }
