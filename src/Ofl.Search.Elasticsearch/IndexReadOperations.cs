@@ -65,8 +65,8 @@ namespace Ofl.Search.Elasticsearch
                 ConfigureAwait(false);
 
             // Get the Ids.
-            IReadOnlyCollection<Id> ids = request.Ids
-                .Select(id => id.ToId())
+            IReadOnlyCollection<string> ids = request.Ids
+                .Select(id => id.ToString())
                 .Distinct()
                 .ToReadOnlyCollection();
 
@@ -75,13 +75,15 @@ namespace Ofl.Search.Elasticsearch
                 d => d
                     .Index(Index.Name)
                     .Type<T>()
-                    .GetMany<Id>(ids), 
+                    .GetMany<T>(ids),
                 cancellationToken).ConfigureAwait(false);
 
             // Get the hits.
             IReadOnlyCollection<Hit<T>> hits = response
-                .GetMany<T>(ids.Select(id => id.ToString()))
-                .Select(h => new Hit<T> { Item = h.Source })
+                .Documents
+                .Select(d => new Hit<T> {
+                    Item = (T) d.Source
+                })
                 .ToReadOnlyCollection();
 
             // Create the response and return.
