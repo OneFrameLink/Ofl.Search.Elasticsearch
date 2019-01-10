@@ -5,11 +5,12 @@ using Nest;
 
 namespace Ofl.Search.Elasticsearch
 {
-    public abstract class Operations : Operations<Index>
+    public abstract class Operations<T> : Ofl.Search.Operations<Index<T>>
+        where T : class
     {
         #region Constructor
 
-        protected Operations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : base(index)
+        protected Operations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index<T> index) : base(index)
         {
             // Validate parameters.
             _elasticClientFactory = elasticClientFactory ?? throw new ArgumentNullException(nameof(elasticClientFactory));
@@ -25,11 +26,8 @@ namespace Ofl.Search.Elasticsearch
 
         #region Helpers.
 
-        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken)
-        {
-            // Call the implementation.
-            return _elasticClientFactory(cancellationToken);
-        }
+        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken) =>
+            _elasticClientFactory(cancellationToken);
 
         #endregion
     }

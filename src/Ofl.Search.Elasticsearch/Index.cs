@@ -5,7 +5,8 @@ using Nest;
 
 namespace Ofl.Search.Elasticsearch
 {
-    public abstract class Index : Search.Index
+    public abstract class Index<T> : Search.Index<T>
+        where T : class
     {
         #region Constructor
 
@@ -13,6 +14,9 @@ namespace Ofl.Search.Elasticsearch
         {
             // Validate parameters.
             _elasticClientFactory = elasticClientFactory ?? throw new ArgumentNullException(nameof(elasticClientFactory));
+
+            // Assign values.
+            _indexName = IndexName.From<T>();
         }
 
         #endregion
@@ -21,15 +25,14 @@ namespace Ofl.Search.Elasticsearch
 
         private readonly IElasticClientFactory _elasticClientFactory;
 
+        private readonly IndexName _indexName;
+
         #endregion
 
         #region Helpers.
 
-        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken)
-        {
-            // Just call the implementation.
-            return CreateElasticClientImplementationAsync(_elasticClientFactory, cancellationToken);
-        }
+        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken) =>
+            CreateElasticClientImplementationAsync(_elasticClientFactory, cancellationToken);
 
         protected virtual Task<IElasticClient> CreateElasticClientImplementationAsync(IElasticClientFactory elasticClientFactory,
             CancellationToken cancellationToken)
@@ -57,7 +60,7 @@ namespace Ofl.Search.Elasticsearch
             IElasticClient client = await CreateElasticClientAsync(cancellationToken).ConfigureAwait(false);
 
             // The request.
-            IDeleteIndexRequest request = new DeleteIndexDescriptor(Indices.Index(new IndexName { Name = Name }));
+            IDeleteIndexRequest request = new DeleteIndexDescriptor(Indices.Index(_indexName));
 
             // Delete and return the response.
             return await client.DeleteIndexAsync(request, cancellationToken).ConfigureAwait(false);
@@ -89,7 +92,7 @@ namespace Ofl.Search.Elasticsearch
             response.ThrowIfError();
         }
 
-        public override Task<IIndexWriteOperations<T>> GetWriteOperationsAsync<T>(CancellationToken cancellationToken)
+        public override Task<IIndexWriteOperations<T>> GetWriteOperationsAsync(CancellationToken cancellationToken)
         {
             // Create the write operations.
             IIndexWriteOperations<T> ops = new IndexWriteOperations<T>(CreateElasticClientAsync, this);
@@ -100,7 +103,7 @@ namespace Ofl.Search.Elasticsearch
 
         #region Overrides of Index
 
-        public override Task<IIndexReadOperations<T>> GetReadOperationsAsync<T>(CancellationToken cancellationToken)
+        public override Task<IIndexReadOperations<T>> GetReadOperationsAsync(CancellationToken cancellationToken)
         {
             // Create the read operations.
             IIndexReadOperations<T> ops = new IndexReadOperations<T>(CreateElasticClientAsync, this);

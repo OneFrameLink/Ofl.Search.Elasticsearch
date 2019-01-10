@@ -15,8 +15,9 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0" />
     <PackageReference Include="Ofl.Linq.Expressions" Version="1.1.6" />
     <PackageReference Include="Ofl.Reflection" Version="2.0.10" />
-    <PackageReference Include="Ofl.Search" Version="5.0.19" />
-    <PackageReference Include="Ofl.Search.Elasticsearch.Abstractions" Version="2.0.6" />
+    <PackageReference Include="Ofl.Search" Version="6.0.22" />
+    <PackageReference Include="Ofl.Search.Elasticsearch.Abstractions" Version="3.0.8" />
+    <PackageReference Include="Ofl.Search.Extensions" Version="1.0.2" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="4.5.0" />
   </ItemGroup>
 

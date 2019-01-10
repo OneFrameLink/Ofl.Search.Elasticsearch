@@ -8,12 +8,12 @@ using Ofl.Linq;
 
 namespace Ofl.Search.Elasticsearch
 {
-    public class IndexReadOperations<T> : Operations, IIndexReadOperations<T>
+    public class IndexReadOperations<T> : Operations<T>, IIndexReadOperations<T>
         where T : class
     {
         #region Constructor
 
-        internal IndexReadOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : 
+        internal IndexReadOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index<T> index) :
             base(elasticClientFactory, index)
         { }
 
@@ -80,7 +80,7 @@ namespace Ofl.Search.Elasticsearch
 
             // Get the hits.
             IReadOnlyCollection<Hit<T>> hits = response
-                .Documents
+                .Hits
                 .Select(d => new Hit<T> {
                     Item = (T) d.Source
                 })
