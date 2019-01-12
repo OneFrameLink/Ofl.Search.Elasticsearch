@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Nest;
 
 namespace Ofl.Search.Elasticsearch
@@ -10,24 +8,18 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        protected Operations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index<T> index) : base(index)
+        protected Operations(IElasticClient elasticClient, Index<T> index) : base(index)
         {
             // Validate parameters.
-            _elasticClientFactory = elasticClientFactory ?? throw new ArgumentNullException(nameof(elasticClientFactory));
+            ElasticClient = elasticClient
+                ?? throw new ArgumentNullException(nameof(elasticClient));
         }
 
         #endregion
 
         #region Instance, read-only state.
 
-        private readonly Func<CancellationToken, Task<IElasticClient>> _elasticClientFactory;
-
-        #endregion
-
-        #region Helpers.
-
-        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken) =>
-            _elasticClientFactory(cancellationToken);
+        protected IElasticClient ElasticClient { get; }
 
         #endregion
     }

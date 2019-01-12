@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Elasticsearch.Net;
 using Microsoft.Extensions.Options;
 using Nest;
+using Ofl.Linq;
 
 namespace Ofl.Search.Elasticsearch
 {
@@ -11,11 +14,16 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        public ElasticClientFactory(IOptions<ElasticClientFactoryConfiguration> elasticClientFactoryConfigurationOptions)
+        public ElasticClientFactory(
+            IEnumerable<IElasticIndexSource> elasticIndexSources,
+            IOptions<ElasticClientFactoryConfiguration> elasticClientFactoryConfigurationOptions
+        )
         {
             // Validate parameters.
-            _elasticClientFactoryConfigurationOptions = elasticClientFactoryConfigurationOptions ??
-                throw new ArgumentNullException(nameof(elasticClientFactoryConfigurationOptions));
+            _elasticIndexSources = elasticIndexSources?.ToReadOnlyCollection()
+                ?? throw new ArgumentNullException(nameof(elasticIndexSources));
+            _elasticClientFactoryConfigurationOptions = elasticClientFactoryConfigurationOptions
+                ?? throw new ArgumentNullException(nameof(elasticClientFactoryConfigurationOptions));
         }
 
         #endregion
@@ -24,12 +32,13 @@ namespace Ofl.Search.Elasticsearch
 
         private readonly IOptions<ElasticClientFactoryConfiguration> _elasticClientFactoryConfigurationOptions;
 
+        private readonly IReadOnlyCollection<IElasticIndexSource> _elasticIndexSources;
+
         #endregion
 
         #region Implementation of IElasticClientFactory
 
-        public Task<IElasticClient> CreateClientAsync(Func<ConnectionSettings, ConnectionSettings> connectionSettingsModifier, 
-            CancellationToken cancellationToken)
+        public IElasticClient CreateClient()
         {
             // The options.
             ElasticClientFactoryConfiguration elasticClientFactoryConfiguration =
@@ -45,14 +54,15 @@ namespace Ofl.Search.Elasticsearch
             if (elasticClientFactoryConfiguration.EnableHttpCompression)
                 connectionSettings = connectionSettings.EnableHttpCompression();
 
-            // Call the modifier.
-            connectionSettings = connectionSettingsModifier(connectionSettings);
+            // Set the mapping for the types.
+            connectionSettings = _elasticIndexSources.Aggregate(connectionSettings,
+                (cs, s) => cs.DefaultMappingFor(s.Type, s.DefineMapping));
             
             // Create the client.
             IElasticClient client = new ElasticClient(connectionSettings);
 
             // Return the client.
-            return Task.FromResult(client);
+            return client;
         }
 
         #endregion

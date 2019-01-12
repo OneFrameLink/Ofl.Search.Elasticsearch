@@ -13,8 +13,8 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        internal IndexReadOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index<T> index) :
-            base(elasticClientFactory, index)
+        internal IndexReadOperations(IElasticClient elasticClient, Index<T> index) :
+            base(elasticClient, index)
         { }
 
         #endregion
@@ -30,26 +30,25 @@ namespace Ofl.Search.Elasticsearch
             // Validate search request.
             request.Validate();
 
-            // Create the client.
-            IElasticClient client = await CreateElasticClientAsync(cancellationToken).
-                ConfigureAwait(false);
-
             // Create the pre and post tag for highlighting.
             string preAndPostTag = CreatePreAndPostTag();
 
             // Search.
-            ISearchResponse<T> response = await client.SearchAsync<T>(
+            ISearchResponse<T> response = await ElasticClient.SearchAsync<T>(
                 d => d.UpdateSearchDescriptor(Index, request, preAndPostTag), cancellationToken).ConfigureAwait(false);
 
             // Validate the response.
             response.ThrowIfError();
+
+            // Create a copy of pre and post tag.
+            var preAndPostTagCopy = preAndPostTag;
 
             // Return the response.
             return new SearchResponse<T> {
                 Request = request,
                 MaximumScore = (decimal) response.MaxScore,
                 TotalHits = (int) response.Total,
-                Hits = response.Hits.Select(h => h.ToHit(preAndPostTag)).ToReadOnlyCollection()
+                Hits = response.Hits.Select(h => h.ToHit(preAndPostTagCopy)).ToReadOnlyCollection()
             };            
         }
 
@@ -60,10 +59,6 @@ namespace Ofl.Search.Elasticsearch
             // Validate parameters.
             if (request == null) throw new ArgumentNullException(nameof(request));
 
-            // Create the client.
-            IElasticClient client = await CreateElasticClientAsync(cancellationToken).
-                ConfigureAwait(false);
-
             // Get the Ids.
             IReadOnlyCollection<string> ids = request.Ids
                 .Select(id => id.ToString())
@@ -71,7 +66,7 @@ namespace Ofl.Search.Elasticsearch
                 .ToReadOnlyCollection();
 
             // Get the response.
-            IMultiGetResponse response = await client.MultiGetAsync(
+            IMultiGetResponse response = await ElasticClient.MultiGetAsync(
                 d => d
                     .Index(Index.Name)
                     .Type<T>()

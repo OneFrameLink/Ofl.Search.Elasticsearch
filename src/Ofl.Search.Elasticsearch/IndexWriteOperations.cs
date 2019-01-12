@@ -6,13 +6,13 @@ using Nest;
 
 namespace Ofl.Search.Elasticsearch
 {
-    public class IndexWriteOperations<T> : Operations, IIndexWriteOperations<T>
+    public class IndexWriteOperations<T> : Operations<T>, IIndexWriteOperations<T>
         where T : class
     {
         #region Constructor
 
-        internal IndexWriteOperations(Func<CancellationToken, Task<IElasticClient>> elasticClientFactory, Index index) : 
-            base(elasticClientFactory, index)
+        internal IndexWriteOperations(IElasticClient elasticClient, Index<T> index) : 
+            base(elasticClient, index)
         { }
 
         #endregion
@@ -24,10 +24,6 @@ namespace Ofl.Search.Elasticsearch
             // Validate parameters.
             if (source == null) throw new ArgumentNullException(nameof(source));
 
-            // Create the client.
-            IElasticClient client = await CreateElasticClientAsync(cancellationToken).
-                ConfigureAwait(false);
-
             // The request.
             IBulkRequest request = new BulkDescriptor().
                 Index(Index.Name).
@@ -35,7 +31,7 @@ namespace Ofl.Search.Elasticsearch
                 IndexMany(source, (d, t) => d.Document(t));
 
             // Send the request.
-            IBulkResponse response = await client.BulkAsync(request, cancellationToken).ConfigureAwait(false);
+            IBulkResponse response = await ElasticClient.BulkAsync(request, cancellationToken).ConfigureAwait(false);
 
             // Throw if there is an error.
             response.ThrowIfError();

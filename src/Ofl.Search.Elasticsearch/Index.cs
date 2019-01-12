@@ -10,10 +10,11 @@ namespace Ofl.Search.Elasticsearch
     {
         #region Constructor
 
-        protected Index(IElasticClientFactory elasticClientFactory, string name) : base(name)
+        protected Index(string name, IElasticClient elasticClient) : base(name)
         {
             // Validate parameters.
-            _elasticClientFactory = elasticClientFactory ?? throw new ArgumentNullException(nameof(elasticClientFactory));
+            _elasticClient = elasticClient
+                ?? throw new ArgumentNullException(nameof(elasticClient));
 
             // Assign values.
             _indexName = IndexName.From<T>();
@@ -23,26 +24,9 @@ namespace Ofl.Search.Elasticsearch
 
         #region Instance, read-only state.
 
-        private readonly IElasticClientFactory _elasticClientFactory;
+        private readonly IElasticClient _elasticClient;
 
         private readonly IndexName _indexName;
-
-        #endregion
-
-        #region Helpers.
-
-        protected Task<IElasticClient> CreateElasticClientAsync(CancellationToken cancellationToken) =>
-            CreateElasticClientImplementationAsync(_elasticClientFactory, cancellationToken);
-
-        protected virtual Task<IElasticClient> CreateElasticClientImplementationAsync(IElasticClientFactory elasticClientFactory,
-            CancellationToken cancellationToken)
-        {
-            // Validate parameters.
-            if (elasticClientFactory == null) throw new ArgumentNullException(nameof(elasticClientFactory));
-
-            // Return the default.
-            return elasticClientFactory.CreateClientAsync(cancellationToken);
-        }
 
         #endregion
 
@@ -56,14 +40,11 @@ namespace Ofl.Search.Elasticsearch
 
         private async Task<IDeleteIndexResponse> DestroyImplementationAsync(CancellationToken cancellationToken)
         {
-            // Create the client.
-            IElasticClient client = await CreateElasticClientAsync(cancellationToken).ConfigureAwait(false);
-
             // The request.
             IDeleteIndexRequest request = new DeleteIndexDescriptor(Indices.Index(_indexName));
 
             // Delete and return the response.
-            return await client.DeleteIndexAsync(request, cancellationToken).ConfigureAwait(false);
+            return await _elasticClient.DeleteIndexAsync(request, cancellationToken).ConfigureAwait(false);
         }
 
         #endregion
@@ -95,7 +76,7 @@ namespace Ofl.Search.Elasticsearch
         public override Task<IIndexWriteOperations<T>> GetWriteOperationsAsync(CancellationToken cancellationToken)
         {
             // Create the write operations.
-            IIndexWriteOperations<T> ops = new IndexWriteOperations<T>(CreateElasticClientAsync, this);
+            IIndexWriteOperations<T> ops = new IndexWriteOperations<T>(_elasticClient, this);
 
             // Return.
             return Task.FromResult(ops);
@@ -106,7 +87,7 @@ namespace Ofl.Search.Elasticsearch
         public override Task<IIndexReadOperations<T>> GetReadOperationsAsync(CancellationToken cancellationToken)
         {
             // Create the read operations.
-            IIndexReadOperations<T> ops = new IndexReadOperations<T>(CreateElasticClientAsync, this);
+            IIndexReadOperations<T> ops = new IndexReadOperations<T>(_elasticClient, this);
 
             // Return.
             return Task.FromResult(ops);
