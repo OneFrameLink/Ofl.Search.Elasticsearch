@@ -16,8 +16,11 @@ namespace Ofl.Search.Elasticsearch
             // For ease-of-use.
             var sc = serviceCollection;
 
+            // Add the index factory.
+            sc = sc.AddSingleton<IIndexFactory, ElasticIndexFactory>();
+
             // Configure the elastic client factory.
-            sc = sc.AddTransient<IElasticClientFactory, ElasticClientFactory>();
+            sc = sc.AddSingleton<IElasticClientFactory, ElasticClientFactory>();
 
             // Configuration for said factory.
             sc = sc.Configure<ElasticClientFactoryConfiguration>(elasticClientFactoryConfiguration.Bind);
