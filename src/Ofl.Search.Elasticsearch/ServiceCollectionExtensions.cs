@@ -16,6 +16,9 @@ namespace Ofl.Search.Elasticsearch
             // For ease-of-use.
             var sc = serviceCollection;
 
+            // Add the index manager.
+            sc = sc.AddSingleton<IIndexManager, ElasticsearchIndexManager>();
+
             // Add the index factory.
             sc = sc.AddSingleton<IIndexFactory, ElasticIndexFactory>();
 

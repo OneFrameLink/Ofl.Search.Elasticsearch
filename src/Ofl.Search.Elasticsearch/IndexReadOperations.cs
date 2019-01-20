@@ -76,9 +76,7 @@ namespace Ofl.Search.Elasticsearch
             // Get the hits.
             IReadOnlyCollection<Hit<T>> hits = response
                 .Hits
-                .Select(d => new Hit<T> {
-                    Item = (T) d.Source
-                })
+                .Select(d => d.ToHit<object, T>())
                 .ToReadOnlyCollection();
 
             // Create the response and return.

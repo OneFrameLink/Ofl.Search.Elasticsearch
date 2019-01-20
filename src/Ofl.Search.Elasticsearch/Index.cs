@@ -56,6 +56,22 @@ namespace Ofl.Search.Elasticsearch
             response.ThrowIfError();
         }
 
+        public override async Task<IndexStats> GetStatsAsync(CancellationToken cancellationToken)
+        {
+            // The request.
+            IIndicesStatsRequest request = new IndicesStatsRequest(Indices.Index<T>());
+
+            // Get the response.
+            IIndicesStatsResponse response = await ElasticClient
+                .IndicesStatsAsync(request, cancellationToken).ConfigureAwait(false);
+            
+            // If failed, throw.
+            response.ThrowIfError();
+
+            // Map and return.
+            return response.Indices[Name].ToElasticsearchIndexStats();
+        }
+
         public override Task<IIndexWriteOperations<T>> GetWriteOperationsAsync(CancellationToken cancellationToken)
         {
             // Create the write operations.

@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Nest;
+using Ofl.Collections.Generic;
 using Ofl.Linq;
 
 namespace Ofl.Search.Elasticsearch
 {
     public static class HitExtensions
     {
-        public static Hit<T> ToHit<T>(this IHit<T> hit, string preAndPostTag)
+        public static Hit<T> ToHit<T>(this IHit<T> hit)
             where T : class
         {
             // Validate parameters.
@@ -17,9 +18,29 @@ namespace Ofl.Search.Elasticsearch
             // Map and return.
             return new Hit<T> {
                 Item = hit.Source,
-                Score = (decimal?) hit.Score,
-                Highlights = hit.Highlights?.ToReadOnlyDictionary(h => h.Key, h => h.Value.ToHighlightOffsets(preAndPostTag))
+                Id = hit.Id,
+                Index = hit.Index,
+                Score = (decimal?) hit.Score
             };
+        }
+
+        public static Hit<T> ToHit<T>(this IHit<T> hit, string preAndPostTag)
+            where T : class
+        {
+            // Validate parameters.
+            if (hit == null) throw new ArgumentNullException(nameof(hit));
+            if (string.IsNullOrWhiteSpace(preAndPostTag)) throw new ArgumentNullException(nameof(preAndPostTag));
+
+            // Get the root.
+            Hit<T> root = hit.ToHit();
+
+            // Set the highlights.
+            root.Highlights =
+                hit.Highlights?.ToReadOnlyDictionary(h => h.Key, h => h.Value.ToHighlightOffsets(preAndPostTag))
+                ?? ReadOnlyDictionaryExtensions.Empty<string, IReadOnlyCollection<HighlightOffset>>();
+
+            // Return the root.
+            return root;
         }
 
         private static IReadOnlyCollection<HighlightOffset> ToHighlightOffsets(
